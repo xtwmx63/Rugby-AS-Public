@@ -227,10 +227,10 @@ private enum RugbyDesignFixture {
                     context.insert(StatEvent(matchID: match.id, teamID: team.id,
                         playerID: players[(10 + index * 2) % players.count].id,
                         category: "try", outcome: "success", seconds: seconds, half: half))
-                    if index < conversions {
-                        context.insert(StatEvent(matchID: match.id, teamID: team.id, playerID: players[9].id,
-                            category: "conversion", outcome: "success", seconds: seconds + 65, half: half))
-                    }
+                    // 決まらなかった分は「失敗」として残す(成功率が100%にならないように)
+                    context.insert(StatEvent(matchID: match.id, teamID: team.id, playerID: players[9].id,
+                        category: "conversion", outcome: index < conversions ? "success" : "fail",
+                        seconds: seconds + 65, half: half))
                 }
                 for index in 0..<penalties {
                     context.insert(StatEvent(matchID: match.id, teamID: team.id, playerID: players[9].id,
