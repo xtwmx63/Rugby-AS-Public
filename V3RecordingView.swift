@@ -1614,15 +1614,18 @@ return ScoringRules.points(category: event.category, widgetData: event.widgetDat
                 image
                     .resizable()
                     .scaledToFill()
+                    .background(Color.white)
             } placeholder: {
+                // ロゴ未設定: 白地に白い盾だと真っ白な四角に見えるため、地を暗い画面になじむ色にする
                 Image(systemName: "shield.fill")
                     .resizable()
                     .scaledToFit()
                     .foregroundStyle(.white.opacity(0.65))
                     .padding(12)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.white.opacity(0.10))
             }
         }
-        .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
