@@ -150,10 +150,11 @@ private struct RugbyDesignRoutePreview: View {
 private enum RugbyDesignFixture {
     static func insert(into context: ModelContext) {
         let teams = [
-            Team(name: "青葉大学", colorHex: "#126A59", category: "大学"),
-            Team(name: "東都学院大学", colorHex: "#922D42", category: "大学"),
-            Team(name: "海浜大学", colorHex: "#2765A2", category: "大学"),
-            Team(name: "北星ラグビークラブ", colorHex: "#C48A2B", category: "クラブ")
+            // どの試合にも出る青葉大学を青、相手をオレンジ・赤・黄緑にして、対戦の色が見分けやすいようにする
+            Team(name: "青葉大学", colorHex: "#1E88E5", category: "大学"),
+            Team(name: "東都学院大学", colorHex: "#E8483C", category: "大学"),
+            Team(name: "海浜大学", colorHex: "#F08A1C", category: "大学"),
+            Team(name: "北星ラグビークラブ", colorHex: "#8CC63F", category: "クラブ")
         ]
         teams.forEach { context.insert($0) }
 
@@ -194,7 +195,7 @@ private enum RugbyDesignFixture {
         // Latest is a partial recording; all other matches carry the real finish marker.
         let fixtures: [(home: Int, away: Int, date: Date, homeTries: Int, homeConversions: Int, homePenalties: Int,
                         awayTries: Int, awayConversions: Int, awayPenalties: Int, finished: Bool)] = [
-            (0, 1, date(in: month, day: 24), 2, 2, 0, 1, 1, 0, false),
+            (0, 1, date(in: month, day: 24), 3, 2, 0, 1, 1, 0, false),
             (0, 2, date(in: month, day: 20), 4, 4, 0, 3, 3, 0, true),
             (1, 0, date(in: month, day: 12), 3, 3, 1, 3, 1, 0, true),
             (0, 3, date(in: previousMonth, day: 24), 3, 2, 0, 3, 0, 0, true),
