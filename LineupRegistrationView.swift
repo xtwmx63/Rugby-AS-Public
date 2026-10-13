@@ -25,8 +25,6 @@ struct LineupRegistrationView: View {
     @State private var selectedTeamID: UUID?
     @State private var addingContext: AddingContext?
     @State private var pendingRemoval: MatchLineup?
-    @State private var showsRecordingChoice = false
-    @State private var showsWidgetRecording = false
     @State private var showsLegacyRecording = false
     // 背番号を編集中のメンバー表エントリ
     @State private var numberEditingEntry: MatchLineup?
@@ -157,26 +155,10 @@ struct LineupRegistrationView: View {
         // 同じ NavigationStack に navigationDestination(item:) と
         // navigationDestination(isPresented:) を入れ子で重ねると、後者が
         // 無視されることがある SwiftUI の挙動を避けるため、ここは fullScreenCover で出す。
-        .fullScreenCover(isPresented: $showsWidgetRecording) {
-            WidgetRecordingView(
-                match: match,
-                context: modelContext,
-                initialSeconds: 0,
-                initialHalf: 0,
-                onClose: { _, _, _ in }
-            )
-            .preferredColorScheme(.dark)
-            .tint(.blue)
-        }
         .fullScreenCover(isPresented: $showsLegacyRecording) {
             V3RecordingView(match: match)
                 .preferredColorScheme(.dark)
                 .tint(.blue)
-        }
-        .confirmationDialog("記録画面を選択", isPresented: $showsRecordingChoice, titleVisibility: .visible) {
-            Button("カスタム記録画面") { showsWidgetRecording = true }
-            Button("従来の記録画面") { showsLegacyRecording = true }
-            Button("キャンセル", role: .cancel) { }
         }
         .sheet(item: $addingContext) { context in
             playerPickerSheet(role: context.role)
@@ -310,10 +292,10 @@ struct LineupRegistrationView: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
             Button {
-                showsRecordingChoice = true
+                showsLegacyRecording = true
             } label: {
                 HStack(spacing: 10) {
-                    Text("記録画面を選ぶ")
+                    Text("記録を始める")
                     Image(systemName: "arrow.right")
                 }
                 .frame(maxWidth: .infinity)

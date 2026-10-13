@@ -2,9 +2,9 @@
 
 学生アナリストや部活動の指導者が、手軽に試合を記録・分析できる iPhone / iPad 向けのラグビー分析アプリです。
 
-| 試合一覧 | 試合サマリー | チーム成績 | 分析・比較 |
-| :---: | :---: | :---: | :---: |
-| <img src="docs/screenshots/match-list.png" width="200" alt="試合一覧"> | <img src="docs/screenshots/match-summary.png" width="200" alt="試合サマリー"> | <img src="docs/screenshots/team-performance.png" width="200" alt="チーム成績"> | <img src="docs/screenshots/analysis.png" width="200" alt="分析・比較"> |
+| 試合一覧 | 記録画面 | 試合サマリー | チーム成績 | 分析・比較 |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/match-list.png" width="160" alt="試合一覧"> | <img src="docs/screenshots/recording.png" width="160" alt="記録画面"> | <img src="docs/screenshots/match-summary.png" width="160" alt="試合サマリー"> | <img src="docs/screenshots/team-performance.png" width="160" alt="チーム成績"> | <img src="docs/screenshots/analysis.png" width="160" alt="分析・比較"> |
 
 ※ 画面のチーム名・選手名・試合はすべて架空のサンプルです。
 
@@ -20,7 +20,7 @@
 
 ## 主な機能
 
-- **試合の記録**：得点、プレー、メンバー表、交代を記録。記録画面のボタン配置や記録項目は自由に変更できます。
+- **試合の記録**：得点、プレー、メンバー表、交代を記録。保持時間（ポゼッション）の計測や、セットプレーの成否も記録できます。
 - **映像との連携**：試合映像（端末内の動画や YouTube）と記録を時刻で結びつけ、タイムラインで振り返り。記録項目ごとにハイライトを書き出せます。
 - **集計・分析**：試合・チーム・選手・指標を選んで、合計や成功率を比較。独自の比率指標の作成、試合ごとの推移の表示、CSV レポートの書き出しに対応しています。
 - **データの受け渡し**：バックアップファイル（JSON と動画）を AirDrop などで共有できます。

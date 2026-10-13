@@ -22,7 +22,7 @@ struct SettingsView: View {
     // 書き出し完了後、進み具合の画面を閉じてから共有シートに渡すファイル
     @State private var pendingShareURL: URL?
     @AppStorage("backup.lastFileCreatedAt") private var lastFileCreatedAt = 0.0
-    @AppStorage(RugbyTheme.paletteKey) private var palette = RugbyPalette.purple.rawValue
+    @AppStorage(RugbyTheme.paletteKey) private var palette = RugbyPalette.navy.rawValue
 
     var body: some View {
         ScrollView {
@@ -159,9 +159,9 @@ struct SettingsView: View {
         }
     }
 
-    /// アプリ全体の配色。どの色も標準の紫と同じ濃さで、色合いだけが変わる。チームの色(試合・グラフ)は変わらない
+    /// アプリ全体の配色。どの色も同じ濃さで、色合いだけが変わる(紫を基準に色合いを回して作る)。チームの色(試合・グラフ)は変わらない
     private var paletteCard: some View {
-        let selected = RugbyPalette(rawValue: palette) ?? .purple
+        let selected = RugbyPalette(rawValue: palette) ?? .navy
         return VStack(alignment: .leading, spacing: 14) {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 5), spacing: 14) {
                 ForEach(RugbyPalette.allCases) { option in
@@ -194,7 +194,7 @@ struct SettingsView: View {
                     .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
             }
-            Text("見出し・ボタン・背景の色が変わります。濃さは標準の紫と同じです。選択中の下線などのピンクと、チームの色（試合やグラフ）はそのままです。")
+            Text("見出し・ボタン・背景の色が変わります。濃さはどの色も同じです。選択中の下線などのピンクと、チームの色（試合やグラフ）はそのままです。")
                 .font(.footnote)
                 .foregroundStyle(RugbyTheme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)

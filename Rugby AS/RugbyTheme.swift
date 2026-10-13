@@ -27,7 +27,7 @@ enum RugbyTheme {
     /// 今の配色。設定の値が変わったら作り直す(毎回計算しないよう、配色ごとに1回だけ作る)
     private static var cached: (RugbyPalette, Tokens)?
     private static var tokens: Tokens {
-        let palette = RugbyPalette(rawValue: UserDefaults.standard.string(forKey: paletteKey) ?? "") ?? .purple
+        let palette = RugbyPalette(rawValue: UserDefaults.standard.string(forKey: paletteKey) ?? "") ?? .navy
         if let cached, cached.0 == palette { return cached.1 }
         let made = Tokens(palette)
         cached = (palette, made)
@@ -104,9 +104,9 @@ enum RugbyPalette: String, CaseIterable, Identifiable {
 
     var name: String {
         switch self {
-        case .purple: return "パープル（標準）"
+        case .purple: return "パープル"
         case .indigo: return "インディゴ"
-        case .navy: return "ネイビー"
+        case .navy: return "ネイビー（標準）"
         case .blue: return "ブルー"
         case .teal: return "ティール"
         case .green: return "グリーン"

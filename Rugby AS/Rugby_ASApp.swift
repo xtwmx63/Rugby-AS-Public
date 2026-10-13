@@ -35,9 +35,9 @@ private struct AppStartupView: View {
     @State private var attempt = 0
     // 配色を変えたら画面を作り直す(色は RugbyTheme から直接読むので、作り直さないと古い色が残る)。
     // 作り直した後は、配色を選んでいた設定タブを開いたままにする
-    @AppStorage(RugbyTheme.paletteKey) private var palette = RugbyPalette.purple.rawValue
+    @AppStorage(RugbyTheme.paletteKey) private var palette = RugbyPalette.navy.rawValue
     @State private var reopensSettings = false
-    @State private var launchPalette = UserDefaults.standard.string(forKey: RugbyTheme.paletteKey) ?? RugbyPalette.purple.rawValue
+    @State private var launchPalette = UserDefaults.standard.string(forKey: RugbyTheme.paletteKey) ?? RugbyPalette.navy.rawValue
     // 作り直すのと同じ回で判定しないと、最初のタブに戻ってしまう(onChange は作り直しの後に届くため)
     private var initialSection: String? { reopensSettings || palette != launchPalette ? "settings" : nil }
 

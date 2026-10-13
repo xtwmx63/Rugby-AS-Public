@@ -25,8 +25,6 @@ struct MatchSummaryView: View {
 
     @State private var scoringEventForPlayerSelection: StatEvent?
     @State private var timeEditingEvent: StatEvent?
-    @State private var isRecordingChoicePresented = false
-    @State private var isWidgetRecordingPresented = false
     @State private var isLegacyRecordingPresented = false
     @State private var isTimelineEditorPresented = false
     @State private var isPlayListEditorPresented = false
@@ -187,7 +185,7 @@ struct MatchSummaryView: View {
     // MARK: - Body
 
     private var isSummaryCovered: Bool {
-        isWidgetRecordingPresented || isLegacyRecordingPresented || isTimelineEditorPresented || isPlayListEditorPresented
+        isLegacyRecordingPresented || isTimelineEditorPresented || isPlayListEditorPresented
     }
 
     var body: some View {
@@ -266,26 +264,10 @@ struct MatchSummaryView: View {
         .onChange(of: selectedScope) { _, _ in
             selectedProgressionEventID = nil
         }
-        .fullScreenCover(isPresented: $isWidgetRecordingPresented) {
-            WidgetRecordingView(
-                match: match,
-                context: modelContext,
-                initialSeconds: 0,
-                initialHalf: 0,
-                onClose: { _, _, _ in }
-            )
-            .preferredColorScheme(.dark)
-            .tint(.blue)
-        }
         .fullScreenCover(isPresented: $isLegacyRecordingPresented) {
             V3RecordingView(match: match)
                 .preferredColorScheme(.dark)
                 .tint(.blue)
-        }
-        .confirmationDialog("記録画面を選択", isPresented: $isRecordingChoicePresented, titleVisibility: .visible) {
-            Button("カスタム記録画面") { isWidgetRecordingPresented = true }
-            Button("従来の記録画面") { isLegacyRecordingPresented = true }
-            Button("キャンセル", role: .cancel) { }
         }
         .fullScreenCover(isPresented: $isTimelineEditorPresented) {
             TimelineEditorView(match: match)
@@ -352,7 +334,7 @@ struct MatchSummaryView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityAddTraits(.isHeader)
 
-            Button { isRecordingChoicePresented = true } label: {
+            Button { isLegacyRecordingPresented = true } label: {
                 Text("記録へ")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(RugbyTheme.onAccent)
