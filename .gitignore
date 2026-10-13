@@ -1,0 +1,17 @@
+# Xcode
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Swift Package Manager
+.build/
+
+# macOS
+.DS_Store
+
+# Official-record tooling caches (raw source pages stay outside the app)
+__pycache__/
+*.pyc
+
+# Official-record archive (~200MB, over GitHub's 100MB limit; rebuild with Tools/official_records)
+Rugby AS/OfficialRecords.sqlite

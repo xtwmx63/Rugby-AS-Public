@@ -1,0 +1,279 @@
+//
+//  MatchCSVExporter.swift
+//  Rugby AS
+//
+//  試合の記録(StatEvent)をCSVファイルにして共有するための部品。
+//  1行=1記録の表形式。ExcelやNumbersでそのまま開けるよう
+//  UTF-8 BOM付きで書き出す(BOMがないとExcelで日本語が化ける)。
+//
+
+import CoreTransferable
+import Foundation
+import UniformTypeIdentifiers
+
+// 共有シート(ShareLink)に渡す「CSVファイルのもと」。
+// 実際のファイルは共有される瞬間に一時フォルダへ書き出される。
+nonisolated struct MatchCSVFile: Transferable, Sendable {
+    let fileName: String
+    let csvText: String
+
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(exportedContentType: .commaSeparatedText) { file in
+            let url = FileManager.default.temporaryDirectory
+                .appendingPathComponent(file.fileName)
+            var data = Data([0xEF, 0xBB, 0xBF])
+            data.append(Data(file.csvText.utf8))
+            try data.write(to: url)
+            return SentTransferredFile(url)
+        }
+    }
+}
+
+enum MatchCSVExporter {
+    nonisolated private static let headerLine =
+        "大会,試合日,ホーム,アウェイ,前後半,時間,カテゴリ,カテゴリID,チーム,背番号,選手名,結果,継続秒,起点,ウィジェット,数値,単位,選択肢,場所,要確認,メモ,リード秒,ラグ秒,映像ファイル,動画オフセット"
+
+    static func makeFile(
+        match: Match,
+        events: [StatEvent],
+        teams: [Team],
+        players: [Player],
+        lineups: [MatchLineup] = [],
+        tournamentName: String
+    ) -> MatchCSVFile {
+        let homeName = teamName(for: match.homeTeamID, in: teams)
+        let awayName = teamName(for: match.awayTeamID, in: teams)
+
+        let lines = [headerLine] + rowLines(
+            match: match,
+            events: events,
+            teams: teams,
+            players: players,
+            lineups: lineups,
+            tournamentName: tournamentName,
+            metricCategoryNames: metricCategoryNames
+        )
+
+        let safeName = sanitizedFileName(
+            "\(homeName)_vs_\(awayName)_\(fileDateFormatter.string(from: match.playedAt)).csv"
+        )
+
+        return MatchCSVFile(fileName: safeName, csvText: lines.joined(separator: "\n") + "\n")
+    }
+
+    /// 大会の全試合を1つのCSVにまとめる(試合日の古い順)
+    static func makeTournamentFile(
+        tournamentName: String,
+        matches: [Match],
+        events: [StatEvent],
+        teams: [Team],
+        players: [Player],
+        lineups: [MatchLineup] = []
+    ) -> MatchCSVFile {
+        makeTournamentFile(tournamentName: tournamentName, matches: matches, events: events,
+            teams: teams, players: players, lineups: lineups, metricCategoryNames: metricCategoryNames)
+    }
+
+    // Call synchronously with models belonging to the caller's context. Only the
+    // immutable category labels are copied from the main actor for background exports.
+    nonisolated static func makeTournamentFile(
+        tournamentName: String,
+        matches: [Match],
+        events: [StatEvent],
+        teams: [Team],
+        players: [Player],
+        lineups: [MatchLineup],
+        metricCategoryNames: [String: String]
+    ) -> MatchCSVFile {
+        var lines = [headerLine]
+
+        let sortedMatches = matches.sorted { $0.playedAt < $1.playedAt }
+        let eventsByMatch = Dictionary(grouping: events, by: \.matchID)
+        let lineupsByMatch = Dictionary(grouping: lineups, by: \.matchID)
+        for match in sortedMatches {
+            lines += rowLines(
+                match: match,
+                events: eventsByMatch[match.id] ?? [],
+                teams: teams,
+                players: players,
+                lineups: lineupsByMatch[match.id] ?? [],
+                tournamentName: tournamentName,
+                metricCategoryNames: metricCategoryNames
+            )
+        }
+
+        let safeName = sanitizedFileName(
+            "\(tournamentName)_全試合_\(fileDateFormatter.string(from: Date())).csv"
+        )
+
+        return MatchCSVFile(fileName: safeName, csvText: lines.joined(separator: "\n") + "\n")
+    }
+
+    // 1試合分の行(ヘッダーなし)。単体書き出しと大会一括の両方から使う
+    nonisolated private static func rowLines(
+        match: Match,
+        events: [StatEvent],
+        teams: [Team],
+        players: [Player],
+        lineups: [MatchLineup],
+        tournamentName: String,
+        metricCategoryNames: [String: String]
+    ) -> [String] {
+        let homeName = teamName(for: match.homeTeamID, in: teams)
+        let awayName = teamName(for: match.awayTeamID, in: teams)
+        let dateText = dateFormatter.string(from: match.playedAt)
+
+        let rows = events
+            .filter { $0.matchID == match.id && $0.category != "match_state" }
+            .sorted { $0.isRecordedBefore($1) }
+
+        return rows.map { event in
+            let player = players.first { $0.id == event.playerID }
+            // 背番号はその試合のメンバー表の番号(なければ基本番号。背番号なしは空欄)
+            let number = player.flatMap {
+                MatchNumbering.number(for: $0, matchID: match.id, lineups: lineups)
+            }
+            let details = event.recordingDetails
+            let widgetNumber = details.number.map { String($0) } ?? ""
+            let widgetZone = details.zone.map { RecordingFormatting.zone($0, attackUp: details.attackUp) } ?? ""
+            let widgetVideoOffset = details.videoOffset.map { String(format: "%.3f", $0) } ?? ""
+            let values: [String] = [
+                tournamentName,
+                dateText,
+                homeName,
+                awayName,
+                event.half >= 1 ? "後半" : "前半",
+                timeText(displaySeconds(for: event)),
+                categoryLabel(event.category, metricCategoryNames: metricCategoryNames),
+                event.category,
+                teamLabel(for: event, match: match, homeName: homeName, awayName: awayName, teams: teams),
+                number.map(String.init) ?? "",
+                player?.name ?? "",
+                outcomeLabel(event.outcome),
+                durationText(for: event, details: details),
+                PlayOrigin.displayName(for: event.origin) ?? "",
+                details.title ?? "",
+                widgetNumber,
+                details.unit ?? "",
+                details.choice ?? "",
+                widgetZone,
+                details.needsReview ? "要確認" : "",
+                details.note,
+                String(Int(details.leadTime.rounded())),
+                String(Int(details.lagTime.rounded())),
+                details.videoFileName ?? "",
+                widgetVideoOffset
+            ]
+            return values.map(escaped).joined(separator: ",")
+        }
+    }
+
+    nonisolated private static func sanitizedFileName(_ name: String) -> String {
+        name
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+    }
+
+    // ポゼッションは seconds が「継続秒数」なので、開始時刻の方を表示に使う
+    nonisolated private static func displaySeconds(for event: StatEvent) -> Int {
+        if event.category == "possession" {
+            return event.startSeconds ?? 0
+        }
+        return event.seconds
+    }
+
+    nonisolated private static func durationText(for event: StatEvent, details: RecordingEventDetails) -> String {
+        if event.category == "possession" {
+            if let exact = event.durationSecondsExact, exact.isFinite, exact >= 0 { return String(exact) }
+            return String(max(0, event.seconds))
+        }
+        guard let duration = details.intervalDuration, duration.isFinite, duration >= 0 else { return "" }
+        return String(duration)
+    }
+
+    nonisolated private static func teamName(for id: UUID, in teams: [Team]) -> String {
+        teams.first { $0.id == id }?.name ?? "チーム未設定"
+    }
+
+    nonisolated private static func teamLabel(
+        for event: StatEvent,
+        match: Match,
+        homeName: String,
+        awayName: String,
+        teams: [Team]
+    ) -> String {
+        if event.category == "possession" {
+            switch MatchStatistics.possessionTarget(for: event, match: match) {
+            case .home: return homeName
+            case .away: return awayName
+            case .bip: return ""
+            case nil: break
+            }
+        }
+        if let teamID = event.teamID {
+            return teams.first { $0.id == teamID }?.name ?? ""
+        }
+        return ""
+    }
+
+    nonisolated private static func categoryLabel(_ category: String, metricCategoryNames: [String: String]) -> String {
+        switch category {
+        case "possession": return "ポゼッション"
+        case "try": return "トライ"
+        case "conversion": return "コンバージョン"
+        case "penalty_goal": return "ペナルティゴール"
+        case "drop_goal": return "ドロップゴール"
+        case "penalty_try": return "認定トライ"
+        case "lineout": return "ラインアウト"
+        case "scrum": return "スクラム"
+        case "penalty": return "ペナルティ(反則)"
+        default: return metricCategoryNames[category] ?? category
+        }
+    }
+
+    private static let metricCategoryNames: [String: String] = {
+        var labels: [String: String] = [:]
+        for preset in RecordingMetricCatalog.templates where labels[preset.widget.category] == nil {
+            labels[preset.widget.category] = preset.title
+        }
+        return labels
+    }()
+
+    nonisolated private static func outcomeLabel(_ outcome: String) -> String {
+        switch outcome {
+        case "success": return "成功"
+        case "fail": return "失敗"
+        case "own": return "自チーム保持"
+        case "opponent": return "相手保持"
+        case "conceded": return "反則"
+        case "none": return ""
+        default: return outcome
+        }
+    }
+
+    nonisolated private static func timeText(_ seconds: Int) -> String {
+        String(format: "%02d:%02d", seconds / 60, seconds % 60)
+    }
+
+    // カンマや改行を含む値はダブルクォートで包む(CSVの決まりごと)
+    nonisolated private static func escaped(_ value: String) -> String {
+        if value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r") {
+            return "\"" + value.replacingOccurrences(of: "\"", with: "\"\"") + "\""
+        }
+        return value
+    }
+
+    nonisolated private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "ja_JP")
+        formatter.dateFormat = "yyyy/MM/dd"
+        return formatter
+    }()
+
+    nonisolated private static let fileDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyyMMdd"
+        return formatter
+    }()
+}
