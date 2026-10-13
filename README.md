@@ -2,6 +2,12 @@
 
 学生アナリストや部活動の指導者が、手軽に試合を記録・分析できる iPhone / iPad 向けのラグビー分析アプリです。
 
+| 試合一覧 | 試合サマリー | チーム成績 | 分析・比較 |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/match-list.png" width="200" alt="試合一覧"> | <img src="docs/screenshots/match-summary.png" width="200" alt="試合サマリー"> | <img src="docs/screenshots/team-performance.png" width="200" alt="チーム成績"> | <img src="docs/screenshots/analysis.png" width="200" alt="分析・比較"> |
+
+※ 画面のチーム名・選手名・試合はすべて架空のサンプルです。
+
 ## 作った理由
 
 ラグビーの分析現場で活動する中で、プロのチームが使う映像分析ソフトは高額で、高校や大学のチームでは分析環境を整えにくいと感じました。高価なソフトがなくても、試合の記録から振り返りまでを一つのアプリで行えるようにすることを目指しています。
